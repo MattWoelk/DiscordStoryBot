@@ -14,6 +14,10 @@ use serenity::prelude::{Context, EventHandler};
 
 use discord_bot::Game;
 
+use ink_parser;
+
+use pretty_assertions::{assert_eq};
+
 fn main() {
     let token = include_str!("../client_id.txt").trim();
 
@@ -171,4 +175,9 @@ impl Handler {
             .0
             .to_owned()
     }
+}
+
+#[test]
+fn test_parser() {
+    assert_eq!(ink_parser::parse_story(include_str!("../stories/story1.ink")), ink_parser::Story::default());
 }

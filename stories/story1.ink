@@ -3,16 +3,14 @@ VAR health = 100
 
 LONDON, 1872
 Residence of Monsieur Phileas Fogg.
--> paris
+-> paris_downtown
 
-=== paris
-
-= downtown
+=== paris_downtown
 # downtown tag
 It was cool downtown. #tag ya
--> suburbs
+-> paris_suburbs
 
-= suburbs
+=== paris_suburbs
 # suburbs tag
 Suburbs were cool too. #tag too
 ~ health -= 2

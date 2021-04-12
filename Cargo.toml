@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 serenity = "0.8.1"
 inkling = {git = "https://github.com/MattWoelk/inkling.git", branch = "threading"}
+ink_parser = {git = "https://github.com/MattWoelk/ink_parser.git"}
+pretty_assertions = "0.7"
