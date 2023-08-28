@@ -49,11 +49,11 @@ use walkdir::WalkDir;
 )]
 struct Opt {
     /// client token file path
-    #[clap(parse(from_os_str))]
+    #[clap()]
     token_file: PathBuf,
 
     /// Optional saved state file to load.
-    #[clap(short, long, parse(from_os_str))]
+    #[clap(short, long)]
     state: Option<PathBuf>, // TODO: use this
 
     /// Optional knot to start with (can be used with state, but not required). Default is the beginning.
