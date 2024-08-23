@@ -61,6 +61,10 @@ Put your images and .ink files in a directory together, like in the examples in 
 
 ## Deployment
 
+### Notes:
+
+Make sure to activate "Message Content Intent" in your application's "Bot" page, under "Privileged Gateway Intents" which you can get to from [here](https://discord.com/developers/applications).
+
 ### To run locally:
 
 Run `cargo run -- -help`, which will tell you do to something like `cargo run -- client_ids/client_id.txt`.

@@ -456,8 +456,8 @@ async fn main() {
         )
     });
 
-    let intents = GatewayIntents::non_privileged(); // | GatewayIntents::MESSAGE_CONTENT;
-                                                    // | GatewayIntents::MESSAGE_CONTENT;
+    let intents = GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT;
+
     let mut client = Client::builder(token, intents)
         .event_handler(Handler {
             game: Mutex::new(game),
@@ -468,7 +468,13 @@ async fn main() {
         .expect("Error creating client");
 
     if let Err(why) = client.start().await {
+        dbg!(why.to_string());
         println!("Client error: {:?}", why);
+        println!("{}", why.to_string());
+
+        if why.to_string() == "Disallowed gateway intents were provided"{
+            println!("\n - Bot must have message content intents.");
+        }
     }
 }
 
