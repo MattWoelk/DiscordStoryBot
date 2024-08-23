@@ -15,8 +15,8 @@ members = [".", "runner"]
 
 [dependencies]
 ink_runner = { path = "runner", version = "0.1.0"}
-serenity = { version = "0.11", default-features = false, features = ["client", "gateway", "rustls_backend", "model"] }
-tokio = { version = "1.28.2", features = ["macros", "rt-multi-thread"] }
+serenity = { version = "0.12", default-features = false, features = ["client", "gateway", "rustls_backend", "model"] }
+tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
 unicode-segmentation = "1.8.0"
 clap = { version = "4.*", features = ["derive"] }
 walkdir = "2"

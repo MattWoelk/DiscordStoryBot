@@ -25,6 +25,9 @@ use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
 
+use serenity::all::CreateAttachment;
+use serenity::all::CreateMessage;
+use serenity::all::EditMessage;
 use serenity::async_trait;
 use serenity::client::Client;
 use serenity::model::channel::Message;
@@ -237,7 +240,7 @@ impl<'a> EventHandler for Handler<'a> {
                     self.game.lock().unwrap().stopped = false;
                     self.game.lock().unwrap().active = false;
                     let channel = msg.channel_id;
-                    dbg!(most_recent_message.unpin(&ctx).await);
+                    dbg!(most_recent_message.unpin(&ctx).await.unwrap());
                     channel
                         .say(&ctx.http, "The story has been stopped.".to_string())
                         .await
@@ -251,12 +254,17 @@ impl<'a> EventHandler for Handler<'a> {
             let text = self.game.lock().unwrap().lines_as_text();
             let channel = msg.channel_id;
             let images: Vec<String> = self.game.lock().unwrap().images();
-            let images: Vec<&str> = images.iter().map(|s| s.as_str()).collect();
+            //let images: Vec<&str> = images.iter().map(|s| s.as_str()).collect();
+
+            let mut images2: Vec<_> = Vec::new();
+            for i in 0..images.len() {
+                images2.push(CreateAttachment::path(images[i].clone()).await.unwrap());
+            }
+
+            let builder = CreateMessage::new().content(text.clone() + &"\nEND.".to_string());
 
             let _final_message = channel
-                .send_files(&ctx, images, |m| {
-                    m.content(text.clone() + &"\nEND.".to_string())
-                })
+                .send_files(&ctx, images2, builder)
                 .await
                 .expect(&format!("Could not final message {}", &text));
 
@@ -294,21 +302,33 @@ impl<'a> Handler<'a> {
         let mut countdown = countdown as u32;
         let countdown_increment: u32 = 5;
 
-        let images: Vec<&str> = images.iter().map(|s| s.as_str()).collect();
+        //let images: Vec<&str> = images.iter().map(|s| s.as_str()).collect();
 
         dbg!(&images);
 
+        //let images: Vec<_> = images.iter().map(async |s| CreateAttachment::path(s).await.unwrap()).collect();
+        let mut images2: Vec<CreateAttachment> = Vec::new();
+        for i in 0..images.len() {
+            images2.push(CreateAttachment::path(images[i].clone()).await.unwrap());
+        }
+
+
+        //let paths = [
+        //    CreateAttachment::path("/path/to/file.jpg").await.unwrap(),
+        //    CreateAttachment::path("path/to/file2.jpg").await.unwrap(),
+        //];
+
         // Always use send_files, because we can send it no files, and that's fine for a normal message it seems
+        let builder = CreateMessage::new().content(text.to_string() + "\n\n(" + &format_remaining_time(countdown) + ")");
+
         let mut message = channel
-            .send_files(&ctx, images, |m| {
-                m.content(text.to_string() + "\n\n(" + &format_remaining_time(countdown) + ")")
-            })
+            .send_files(&ctx, images2, builder)
             .await
             .expect(&format!("Could not send message {}", &text));
 
         if !self.game.lock().unwrap().do_not_pin() {
-            dbg!(previous_message.unpin(ctx).await); // TODO: docs, saying that Manage Messages is required
-            dbg!(message.pin(ctx).await); // TODO: docs, saying that Manage Messages is required
+            dbg!(previous_message.unpin(ctx).await.unwrap()); // TODO: docs, saying that Manage Messages is required
+            dbg!(message.pin(ctx).await.unwrap()); // TODO: docs, saying that Manage Messages is required
         }
 
         // React to self with options
@@ -335,10 +355,12 @@ impl<'a> Handler<'a> {
             let new_message_content =
                 text.to_string() + "\n\n(" + &format_remaining_time(countdown) + ")";
 
+            let builder = EditMessage::new().content(new_message_content.clone());
+
             // Only send a message update if the message content is different than what we would have sent before
             if new_message_content != old_message_content {
                 message
-                    .edit(ctx, |m| m.content(&new_message_content))
+                    .edit(ctx, builder)
                     .await
                     .expect("could not edit");
                 old_message_content = new_message_content.to_string();
