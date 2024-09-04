@@ -25,7 +25,7 @@ use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
 
-use serenity::all::CreateAttachment;
+use serenity::all::{CreateAttachment};//, CreateCommand, CreateCommandOption, GuildId, Interaction};
 use serenity::all::CreateMessage;
 use serenity::all::EditMessage;
 use serenity::async_trait;
@@ -35,15 +35,22 @@ use serenity::model::channel::ReactionType;
 use serenity::model::gateway::Ready;
 use serenity::prelude::GatewayIntents;
 use serenity::prelude::{Context, EventHandler};
+//use serenity::builder::{
+//    CreateInteractionResponse, CreateInteractionResponseMessage,
+//};
 
 use clap::Parser;
-
+use shuttle_runtime::__internals::Context as ShuttleContext;
 use discord_story_bot::{story_has_hidden_tag, Game};
 
 use ink_runner::ink_parser::InkStory;
 use ink_runner::ink_runner::import_story;
 use unicode_segmentation::UnicodeSegmentation;
 use walkdir::WalkDir;
+//use tracing::info;
+
+use shuttle_runtime::SecretStore;
+
 
 #[derive(Debug, Parser)]
 #[clap(
@@ -422,10 +429,109 @@ fn format_title_and_author(title: &str, author: Option<String>) -> String {
         }
 }
 
-#[tokio::main]
-async fn main() {
-    let opt: Opt = Parser::parse();
-    println!("{:#?}", opt);
+//struct Bot {
+//    weather_api_key: String,
+//    client: reqwest::Client,
+//    discord_guild_id: GuildId,
+//}
+
+//#[async_trait]
+//impl EventHandler for Bot {
+//    async fn ready(&self, ctx: Context, ready: Ready) {
+//        info!("{} is connected!", ready.user.name);
+//
+//        let commands = vec![
+//            CreateCommand::new("hello").description("Say hello"),
+//            CreateCommand::new("weather")
+//                .description("Display the weather")
+//                .add_option(
+//                    CreateCommandOption::new(
+//                        serenity::all::CommandOptionType::String,
+//                        "place",
+//                        "City to lookup forecast",
+//                    )
+//                        .required(true),
+//                ),
+//        ];
+//
+//        let commands = &self
+//            .discord_guild_id
+//            .set_commands(&ctx.http, commands)
+//            .await
+//            .unwrap();
+//
+//        info!("Registered commands: {:#?}", commands);
+//    }
+//
+//    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+//        if let Interaction::Command(command) = interaction {
+//            let response_content = match command.data.name.as_str() {
+//                "hello" => "hello".to_owned(),
+//                "weather" => {
+//                    "cool".to_string()
+//                }
+//                command => unreachable!("Unknown command: {}", command),
+//            };
+//
+//            let data = CreateInteractionResponseMessage::new().content(response_content);
+//            let builder = CreateInteractionResponse::Message(data);
+//
+//            if let Err(why) = command.create_response(&ctx.http, builder).await {
+//                println!("Cannot respond to slash command: {why}");
+//            }
+//        }
+//    }
+//}
+
+#[shuttle_runtime::main]
+async fn serenity(
+    #[shuttle_runtime::Secrets] secret_store: SecretStore,
+) -> shuttle_serenity::ShuttleSerenity {
+    // Get the discord token set in `Secrets.toml`
+    let discord_token = secret_store
+        .get("DISCORD_TOKEN")
+        .context("'DISCORD_TOKEN' was not found")?;
+
+    let weather_api_key = secret_store
+        .get("WEATHER_API_KEY")
+        .context("'WEATHER_API_KEY' was not found")?;
+
+    let discord_guild_id = secret_store
+        .get("DISCORD_GUILD_ID")
+        .context("'DISCORD_GUILD_ID' was not found")?;
+
+    let client = get_client(
+        &discord_token,
+        &weather_api_key,
+        discord_guild_id.parse().unwrap(),
+    )
+        .await;
+    Ok(client.into())
+}
+
+pub async fn get_client(
+    discord_token: &str,
+    _weather_api_key: &str,
+    _discord_guild_id: u64,
+) -> Client {
+    // Set gateway intents, which decides what events the bot will be notified about.
+    // Here we don't need any intents so empty
+    //let intents = GatewayIntents::empty();
+
+    //Client::builder(discord_token, intents)
+    //    .event_handler(Bot {
+    //        weather_api_key: weather_api_key.to_owned(),
+    //        client: reqwest::Client::new(),
+    //        discord_guild_id: GuildId::new(discord_guild_id),
+    //    })
+    //    .await
+    //    .expect("Err creating client")
+//}
+
+//#[tokio::main]
+//async fn main() {
+    //let opt: Opt = Parser::parse();
+    //println!("{:#?}", opt);
 
     let stories: Vec<(PathBuf, String)> = get_ink_files_with_paths();
 
@@ -437,9 +543,10 @@ async fn main() {
         fs::read_to_string(story_0.0.to_string_lossy().to_string() + "/" + &story_0.1 + ".ink")
             .unwrap();
 
-    let token = fs::read_to_string(opt.token_file).unwrap();
+    let token = discord_token; //fs::read_to_string(opt.token_file).unwrap();
 
-    let game = Game::new(&story_text, opt.knot, &stories[0].0).set_do_not_pin(opt.do_not_pin);
+    //let game = Game::new(&story_text, opt.knot, &stories[0].0).set_do_not_pin(opt.do_not_pin);
+    let game = Game::new(&story_text, None, &stories[0].0).set_do_not_pin(false);
 
     let stories = stories.iter().map(|(dir, file)| {
         let full_path = dir.to_string_lossy().to_string() + "/" + file + ".ink";
@@ -476,6 +583,8 @@ async fn main() {
             println!("\n - Bot must have message content intents.");
         }
     }
+
+    client
 }
 
 fn format_remaining_time(time_remaining: u32) -> String {

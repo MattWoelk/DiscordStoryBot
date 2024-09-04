@@ -74,3 +74,6 @@ typings/
 
 /target
 **/*.rs.bk
+
+.shuttle-storage
+Secrets*.toml

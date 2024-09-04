@@ -108,3 +108,10 @@ To see all the instructions you can give, run `!help` in a discord channel that 
 Run `!play` to see a list of stories that are available, and instructions for how to run one.
 
 The key in that list is the filename of the story (without `.ink`), and it will show the title and author as well if those tags are available in your story.
+
+
+## Shuttle.rs Instructions
+
+TODO: a link at least, or a bunch of commands to run?
+
+cargo shuttle deploy --allow-dirty
