@@ -115,3 +115,8 @@ The key in that list is the filename of the story (without `.ink`), and it will 
 TODO: a link at least, or a bunch of commands to run?
 
 cargo shuttle deploy --allow-dirty
+
+
+TODO:
+[] Can I just use their (shuttle's) tiny file, but do it myself with the git version of serenity?
+https://github.com/shuttle-hq/shuttle/blob/main/services/shuttle-serenity/src/lib.rs
